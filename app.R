@@ -49,7 +49,7 @@ ui <-
              fluidRow(
                
                column(4, offset=4,
-                      wellPanel(##
+                      wellPanel(###
                       )
                )
                
