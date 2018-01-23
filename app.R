@@ -69,12 +69,6 @@ exampledata <- data.frame(
     year = c(2008, 2008, 2008, 2008, 2008, 2009, 2009, 2009, 2009, 2009, 2010, 2010, 2010, 2010, 2010, 2011, 2011, 2011, 2011, 2011, 2012, 2012, 2012, 2012, 2012, 2013, 2013, 2013, 2013, 2013, 2014, 2014, 2014, 2014, 2014, 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 2017, 2017, 2017, 2017, 2017, 2018, 2018, 2018, 2018, 2018)
 )
 
-
-
-
-
-
-
 ## set axis
 xaxis_template <- list(
   showgrid = F ,
@@ -95,6 +89,111 @@ yaxis_template <- list(
   mirror = "all")
 
 
+##################################################################################
+##################################################################################
+## server                                                                     ####
+##################################################################################
+##################################################################################
+
+server <- 
+  
+  function(input, output) {
+    
+    observeEvent(input$goButton, {
+      updateNavbarPage(session, inputId = "", selected = "outputTab")
+    })
+    
+    
+    ## Render Likert-Matrix awareness
+    # setting up matrix
+    m_aw <- matrix(
+      anchors, nrow = 5, ncol = 6, byrow = TRUE,
+      dimnames = list(awareness, anchors)
+    )
+    
+    # 
+    for (i in seq_len(nrow(m_aw))) {
+      m_aw[i, ] = sprintf(
+        '<input type="radio" name="%s" value="%s"/>',
+        awareness[i], m_aw[i, ]
+      )
+    }
+    
+    #
+    output$likert_matrix_aware = DT::renderDataTable(
+      m_aw, escape = FALSE, selection = 'none', server = FALSE,
+      options = list(dom = 't', paging = FALSE, ordering = FALSE, 
+                     autoWidth = TRUE,
+                     columnDefs = list(list(className = 'dt-center', width = '75px', targets = c(1:6)))),
+      callback = JS("table.rows().every(function(i, tab, row) {
+                    var $this = $(this.node());
+                    $this.attr('id', this.data()[0]);
+                    $this.addClass('shiny-input-radiogroup');
+  });
+                    Shiny.unbindAll(table.table().node());
+                    Shiny.bindAll(table.table().node());")
+    )
+    
+    
+    ## Render Likert-Matrix inclination
+    # setting up matrix
+    m_in <- matrix(
+      anchors, nrow = 5, ncol = 6, byrow = TRUE,
+      dimnames = list(inclination, anchors)
+    )
+    
+    # 
+    for (i in seq_len(nrow(m_in))) {
+      m_in[i, ] = sprintf(
+        '<input type="radio" name="%s" value="%s"/>',
+        inclination[i], m_in[i, ]
+      )
+    }
+    
+    #
+    output$likert_matrix_inclin = DT::renderDataTable(
+      m_in, escape = FALSE, selection = 'none', server = FALSE,
+      options = list(dom = 't', paging = FALSE, ordering = FALSE, 
+                     autoWidth = TRUE,
+                     columnDefs = list(list(className = 'dt-center', width = '75px', targets = c(1:6)))),
+      callback = JS("table.rows().every(function(i, tab, row) {
+                    var $this = $(this.node());
+                    $this.attr('id', this.data()[0]);
+                    $this.addClass('shiny-input-radiogroup');
+                    });
+                    Shiny.unbindAll(table.table().node());
+                    Shiny.bindAll(table.table().node());")
+    )
+    
+    
+    ## Render plotly output
+    output$plot1 <- renderPlotly({
+      
+      exampledata <- exampledata%>%
+        filter(year == input$year2)
+      
+      plot_ly(exampledata, 
+              x = ~aware, y = ~incli, 
+              # text = ~name, 
+              type = 'scatter', 
+              mode = 'markers',
+              marker = list(size = 16, opacity = 0.7),
+              color = ~name) %>%
+        layout(title = 'Your awareness and inclination scores over time',
+               xaxis = xaxis_template,
+               yaxis = yaxis_template,
+               plot_bgcolor = "#f2f6f7",
+               paper_bgcolor = "#fff",
+               autosize = F,
+               width = "55%",
+               height = "50%"
+        )
+      
+    })
+    
+    
+    }
+
 
 ##################################################################################
 ##################################################################################
@@ -104,15 +203,13 @@ yaxis_template <- list(
 
 
 ui <- 
-  
-  navbarPage(
-    title = "EA Movement Growth",
-    id ="eaGrowth",
-    theme = shinytheme("sandstone"),
-    
+  navbarPage(title = div(icon("lightbulb-o", lib = "font-awesome")),
+             windowTitle = "EA Movement Growth",
+             id ="eagrowth",  
+             theme = shinytheme("sandstone"),
     ## Input-Tab ##
     tabPanel(title = "input",
-             value = "inputTab",
+             value = "inputtab",
              fluidRow(
                column(8, offset=2,
                       h1("Behold peasants"),
@@ -132,35 +229,38 @@ ui <-
              br(),
              br(),
              br(),
-             fluidRow(
-               column(2, offset=3,
-                      selectInput("addToGroup", "save data for group:",
-                        c("please select" = "",
-                          "EA Tübingen" = "eaTueb",
-                          "EA Stuttgart" = "eaStu",
-                          "EA Berlin" = "eaBer",
-                          "EA London" = "eaLon",
-                          "create new group" = "new")
-                      ),
-                      conditionalPanel(condition = "input.addToGroup == 'new'",
-                                       textInput("newGroup",
-                                         "name your new group"
-                                       )
-                      )
-               ),
-               column(2,
-                      textInput("nameSave",
-                                "your name (optional)"
-                      )
-               ),
-               br(),
-               column(2,
-                      actionButton("goButton", label = div(icon("save", lib = "font-awesome")), icon = icon("line-chart", lib = "font-awesome"))
-               )
+             wellPanel(
+                fluidRow(
+                  column(2, offset=3,
+                         selectInput("addToGroup", "save data for group:",
+                           c("please select" = "",
+                             "EA Tübingen" = "eaTueb",
+                             "EA Stuttgart" = "eaStu",
+                             "EA Berlin" = "eaBer",
+                             "EA London" = "eaLon",
+                             "create new group" = "new")
+                         ),
+                         conditionalPanel(condition = "input.addToGroup == 'new'",
+                                          textInput("newGroup",
+                                            "name your new group"
+                                          )
+                         )
+                  ),
+                  column(2,
+                         textInput("nameSave",
+                                   "your name (optional)"
+                         )
+                  ),
+                  br(),
+                  column(2,
+                         textOutput("mycount"),
+                         actionButton(inputId = "goButton", label = div(icon("save", lib = "font-awesome"), HTML("&nbsp;"), "save & plot", HTML("&nbsp;"), icon("line-chart", lib = "font-awesome")))
+                  )
+                )
              )
     ),
     tabPanel(title = "output",
-             value = "outputTab",
+             value = "outputtab",
              fluidRow(
                column(2, offset = 2,
                       sliderInput("year2", "Jahr", 2008, 2018, value = 2008, step = 1, animate=animationOptions(interval=1500, loop=T, playButton="► automatisch abspielen"), ticks=T, sep="")
@@ -171,108 +271,6 @@ ui <-
              )
     )
   )
-
-##################################################################################
-##################################################################################
-## server                                                                     ####
-##################################################################################
-##################################################################################
-
-server <- 
-  
-  function(input, output) {
-    ## Render Likert-Matrix awareness
-      # setting up matrix
-      m_aw <- matrix(
-        anchors, nrow = 5, ncol = 6, byrow = TRUE,
-        dimnames = list(awareness, anchors)
-      )
-      
-      # 
-      for (i in seq_len(nrow(m_aw))) {
-        m_aw[i, ] = sprintf(
-          '<input type="radio" name="%s" value="%s"/>',
-          awareness[i], m_aw[i, ]
-        )
-      }
-      
-      #
-      output$likert_matrix_aware = DT::renderDataTable(
-        m_aw, escape = FALSE, selection = 'none', server = FALSE,
-        options = list(dom = 't', paging = FALSE, ordering = FALSE, 
-                       autoWidth = TRUE,
-                       columnDefs = list(list(className = 'dt-center', width = '75px', targets = c(1:6)))),
-        callback = JS("table.rows().every(function(i, tab, row) {
-                  var $this = $(this.node());
-                  $this.attr('id', this.data()[0]);
-                  $this.addClass('shiny-input-radiogroup');
-                  });
-                  Shiny.unbindAll(table.table().node());
-                  Shiny.bindAll(table.table().node());")
-      )
-      
-    
-    ## Render Likert-Matrix inclination
-      # setting up matrix
-      m_in <- matrix(
-        anchors, nrow = 5, ncol = 6, byrow = TRUE,
-        dimnames = list(inclination, anchors)
-      )
-      
-      # 
-      for (i in seq_len(nrow(m_in))) {
-        m_in[i, ] = sprintf(
-          '<input type="radio" name="%s" value="%s"/>',
-          inclination[i], m_in[i, ]
-        )
-      }
-      
-      #
-      output$likert_matrix_inclin = DT::renderDataTable(
-        m_in, escape = FALSE, selection = 'none', server = FALSE,
-        options = list(dom = 't', paging = FALSE, ordering = FALSE, 
-                       autoWidth = TRUE,
-                       columnDefs = list(list(className = 'dt-center', width = '75px', targets = c(1:6)))),
-        callback = JS("table.rows().every(function(i, tab, row) {
-                      var $this = $(this.node());
-                      $this.attr('id', this.data()[0]);
-                      $this.addClass('shiny-input-radiogroup');
-                      });
-                      Shiny.unbindAll(table.table().node());
-                      Shiny.bindAll(table.table().node());")
-      )
-      
-      
-      ## Render plotly output
-      output$plot1 <- renderPlotly({
-        
-        exampledata <- exampledata%>%
-          filter(year == input$year2)
-        
-        plot_ly(exampledata, 
-                x = ~aware, y = ~incli, 
-                # text = ~name, 
-                type = 'scatter', 
-                mode = 'markers',
-                marker = list(size = 16, opacity = 0.7),
-                color = ~name) %>%
-          layout(title = 'Your awareness and inclination scores over time',
-                 xaxis = xaxis_template,
-                 yaxis = yaxis_template,
-                 plot_bgcolor = "#f2f6f7",
-                 paper_bgcolor = "#fff"#,
-                 # autosize = F, 
-                 # width = "55%", 
-                 # height = "50%"
-                 )
-        
-      })
-      
-
-    observeEvent(input$goButton, {
-      updateNavbarPage(session, inputId = "eaGrowth", selected = "outputTab")
-    })
-  }
 
 
 shinyApp(ui = ui, server = server)
