@@ -95,12 +95,10 @@ yaxis_template <- list(
 ##################################################################################
 ##################################################################################
 
-server <- 
-  
-  function(input, output) {
+server <- function(input, output, session) {
     
     observeEvent(input$goButton, {
-      updateNavbarPage(session, inputId = "", selected = "outputTab")
+      updateNavbarPage(session, inputId = "eagrowth", selected = "outputtab")
     })
     
     
@@ -202,8 +200,7 @@ server <-
 ##################################################################################
 
 
-ui <- 
-  navbarPage(title = div(icon("lightbulb-o", lib = "font-awesome")),
+ui <- navbarPage(title = div(icon("lightbulb-o", lib = "font-awesome")),
              windowTitle = "EA Movement Growth",
              id ="eagrowth",  
              theme = shinytheme("sandstone"),
