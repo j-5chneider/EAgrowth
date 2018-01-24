@@ -190,6 +190,14 @@ server <- function(input, output, session) {
     })
     
     
+    ## Group selected
+    observe({
+      input$addToGroup
+      
+      updateSelectInput(session, "showGroup", "You see data of the group:", selected = input$addToGroup)
+      })
+    
+    
     }
 
 
@@ -207,6 +215,7 @@ ui <- navbarPage(title = div(icon("lightbulb-o", lib = "font-awesome")),
     ## Input-Tab ##
     tabPanel(title = "input",
              value = "inputtab",
+             tags$head(tags$script(src = "enter_button.js")), 
              fluidRow(
                column(8, offset=2,
                       h1("Behold peasants"),
@@ -230,7 +239,7 @@ ui <- navbarPage(title = div(icon("lightbulb-o", lib = "font-awesome")),
                 fluidRow(
                   column(2, offset=3,
                          selectInput("addToGroup", "save data for group:",
-                           c("please select" = "",
+                           c("dont't save to a group" = "",
                              "EA Tübingen" = "eaTueb",
                              "EA Stuttgart" = "eaStu",
                              "EA Berlin" = "eaBer",
@@ -244,14 +253,17 @@ ui <- navbarPage(title = div(icon("lightbulb-o", lib = "font-awesome")),
                          )
                   ),
                   column(2,
-                         textInput("nameSave",
-                                   "your name (optional)"
-                         )
+                         conditionalPanel(condition = "input.addToGroup != ''",
+                                          passwordInput("password", "password for group:"),
+                                          textInput("nameSave",
+                                                    "your name (optional)"
+                                          )
+                         ),
+                         HTML("&nbsp;")
                   ),
                   br(),
                   column(2,
-                         textOutput("mycount"),
-                         actionButton(inputId = "goButton", label = div(icon("save", lib = "font-awesome"), HTML("&nbsp;"), "save & plot", HTML("&nbsp;"), icon("line-chart", lib = "font-awesome")))
+                         actionButton("goButton", label = div(icon("save", lib = "font-awesome"), HTML("&nbsp;"), "save & plot", HTML("&nbsp;"), icon("line-chart", lib = "font-awesome")))
                   )
                 )
              )
@@ -259,8 +271,20 @@ ui <- navbarPage(title = div(icon("lightbulb-o", lib = "font-awesome")),
     tabPanel(title = "output",
              value = "outputtab",
              fluidRow(
+               
                column(2, offset = 2,
-                      sliderInput("year2", "Jahr", 2008, 2018, value = 2008, step = 1, animate=animationOptions(interval=1500, loop=T, playButton="► automatisch abspielen"), ticks=T, sep="")
+                      wellPanel(
+                        ## HIER bei selected weiter
+                         selectInput("showGroup", "You see data of the group:",
+                                     c("all saved data" = "",
+                                       "EA Tübingen" = "eaTueb",
+                                       "EA Stuttgart" = "eaStu",
+                                       "EA Berlin" = "eaBer",
+                                       "EA London" = "eaLon",
+                                       "your new group" = "new")
+                         ),
+                         sliderInput("year2", "year", 2008, 2018, value = 2008, step = 1, animate=animationOptions(interval=1500, loop=T, playButton="► automatisch abspielen"), ticks=T, sep="")
+                  )
                ),
                column(4,
                       plotlyOutput("plot1")
