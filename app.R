@@ -439,10 +439,9 @@ ui <-
       fluidRow(column(
         8,
         offset = 2,
-        h1("Behold peasants"),
-        p(
-          "this is the all new instrument to assess awareness and inclination in movements. I assume awareness will (in this case) best be measured using \"criteria\" rather than self-perceived estimation. Self-perceived ratings for inclination on the other hand may produce highly valid measurements."
-        )
+        h1("Movement Growth"),
+        p("This is the all new instrument to assess awareness and inclination in movements. I assume awareness will (in this case) best be measured using \"criteria\" rather than self-perceived estimation. Self-perceived ratings for inclination on the other hand may produce highly valid measurements."),
+        p("Please note that this is a draft version of the app. Data will not be saved and the data shown on the \"output\"-Tab are toy data to exemplify the functions of the app.")
       )),
       fluidRow(
         column(
